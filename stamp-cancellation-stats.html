@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stamp Cancellation Game — Pin Statistics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f3ee;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1a1a1a;
+    color: #f5f3ee;
+    padding: 2rem 2.5rem;
+    border-bottom: 3px solid #c8a96e;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 0.875rem;
+    color: #aaa;
+    margin-top: 0.3rem;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem 2.5rem;
+    flex-wrap: wrap;
+    background: #1a1a1a;
+    border-bottom: 3px solid #c8a96e;
+  }
+
+  .stat {
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 0.9rem 1.4rem;
+    min-width: 130px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #c8a96e;
+  }
+
+  .controls {
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+  }
+
+  .controls label {
+    font-size: 13px;
+    color: #555;
+  }
+
+  .controls select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .chart-section {
+    padding: 1.5rem 2.5rem 3rem;
+    background: #fff;
+  }
+
+  #chartWrap {
+    position: relative;
+    width: 100%;
+    height: 520px;
+    transition: height 0.2s ease;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    color: #999;
+    border-top: 1px solid #e0ddd7;
+    background: #f5f3ee;
+  }
+
+  @media (max-width: 600px) {
+    header, .stats-row, .controls, .chart-section { padding-left: 1rem; padding-right: 1rem; }
+    .stat-value { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Stamp Cancellation Game</h1>
+  <p>Pin statistics by country</p>
+</header>
+
+<div class="stats-row">
+  <div class="stat">
+    <div class="stat-label">Total pins</div>
+    <div class="stat-value">4,589</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Countries</div>
+    <div class="stat-value">154</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">No country data</div>
+    <div class="stat-value">82</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Top country</div>
+    <div class="stat-value">Australia</div>
+  </div>
+</div>
+
+<div class="controls">
+  <label for="topN">Show top</label>
+  <select id="topN">
+    <option value="20">20 countries</option>
+    <option value="40">40 countries</option>
+    <option value="80">80 countries</option>
+    <option value="154">All 154</option>
+  </select>
+</div>
+
+<div class="chart-section">
+  <div id="chartWrap">
+    <canvas id="myChart" role="img" aria-label="Horizontal bar chart of stamp cancellation game pins per country. Australia leads with 896 pins.">Top countries: Australia 896, United Kingdom 476, Canada 330, Poland 328, Germany 271.</canvas>
+  </div>
+</div>
+
+<footer>Data exported from the Stamp Cancellation Game uMap — 4,589 pins across 154 countries</footer>
+
+<script>
+const allData = [
+  ['Australia',896],['United Kingdom',476],['Canada',330],['Poland',328],['Germany',271],
+  ['United States',190],['Switzerland',130],['Japan',127],['France',116],['Austria',112],
+  ['Sweden',105],['Belgium',91],['Netherlands',81],['Norway',77],['Denmark',72],
+  ['New Zealand',68],['India',43],['Hungary',42],['Ukraine',42],['Italy',41],
+  ['South Africa',37],['Jamaica',30],['Czechia',27],['Greece',25],['Ghana',24],
+  ['Finland',22],['Malaysia',22],['China',21],['DR Congo',20],['Tanzania',20],
+  ['Brazil',19],['Spain',19],['Nigeria',18],['Egypt',18],['Croatia',18],
+  ['Indonesia',17],['Greenland',17],['Kenya',17],['Russia',13],['Sri Lanka',13],
+  ['Zambia',12],['Malta',12],['Namibia',12],['Iceland',11],['Chile',11],
+  ['Romania',11],['Mauritius',10],['Mexico',9],['Uganda',9],['Estonia',9],
+  ['UAE',8],['Tunisia',8],['Ireland',8],['Serbia',8],['Cameroon',8],
+  ['Israel',8],['Portugal',7],['Algeria',7],['Madagascar',7],['Belarus',7],
+  ["Côte d'Ivoire",6],['Morocco',6],['Syria',6],['Trinidad & Tobago',6],
+  ['Senegal',6],['Lithuania',6],['Papua New Guinea',6],['Pakistan',6],
+  ['Iran',5],['Guyana',5],['Turkey',5],['Venezuela',5],['Luxembourg',5],
+  ['Cyprus',5],['Fiji',5],['Slovakia',5],['Thailand',4],['Slovenia',4],
+  ['Argentina',4],['Guernsey',4],['Malawi',4],['Taiwan',4],['Ethiopia',3],
+  ['Yemen',3],['Iraq',3],['Panama',3],['Sudan',3],['Congo-Brazzaville',3],
+  ['Saudi Arabia',3],['Philippines',3],['British Virgin Islands',3],['Botswana',3],
+  ['Bosnia & Herzegovina',3],['Liechtenstein',3],['Burkina Faso',3],['Liberia',3],
+  ['South Korea',3],['Zimbabwe',3],['Vietnam',3],['Lesotho',3],['Sierra Leone',3],
+  ['Tonga',3],['Singapore',3],['Bulgaria',3],['Falkland Islands',2],['Benin',2],
+  ['Samoa',2],['Eritrea',2],['Cook Islands',2],['Lebanon',2],['Bangladesh',2],
+  ['Nepal',2],['Colombia',2],['Bermuda',2],['Solomon Islands',2],['The Bahamas',2],
+  ['Burundi',2],['Togo',2],['Niger',2],['Comoros',2],['Faroe Islands',2],
+  ['Bhutan',2],['Pitcairn Islands',1],['Kazakhstan',1],['Niue',1],['Jordan',1],
+  ['St Helena',1],['Kyrgyzstan',1],['Vatican City',1],['Bolivia',1],['Djibouti',1],
+  ['Qatar',1],['Isle of Man',1],['Cayman Islands',1],['Gibraltar',1],['Rwanda',1],
+  ['Mali',1],['Turks & Caicos',1],['Ecuador',1],['Jersey',1],['Afghanistan',1],
+  ['St Vincent',1],['Albania',1],['Montenegro',1],['Dominican Republic',1],['Gabon',1],
+  ['Angola',1],['Marshall Islands',1],['Equatorial Guinea',1],['Eswatini',1],
+  ['Myanmar',1],['Monaco',1],['Uruguay',1],['Chad',1],['Andorra',1],
+  ['Cambodia',1],['Vanuatu',1],['Haiti',1],['North Korea',1],['Brunei',1],
+  ['South Georgia',1],['Antigua & Barbuda',1],['Barbados',1],['Kiribati',1],
+  ['Georgia',1],['Libya',1],['Mongolia',1],['Uzbekistan',1],['Seychelles',1],
+  ['Dominica',1],['Micronesia',1]
+];
+
+let chart;
+
+function buildChart(n) {
+  const slice = allData.slice(0, n);
+  const labels = slice.map(d => d[0]);
+  const values = slice.map(d => d[1]);
+  const h = Math.max(520, n * 28 + 80);
+  document.getElementById('chartWrap').style.height = h + 'px';
+
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('myChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Pins',
+        data: values,
+        backgroundColor: '#c8a96e',
+        borderRadius: 3,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.parsed.x + ' pins'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.07)' },
+          ticks: { color: '#888', font: { size: 11 } }
+        },
+        y: {
+          ticks: { color: '#333', font: { size: 11 }, autoSkip: false },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+buildChart(20);
+
+document.getElementById('topN').addEventListener('change', e => {
+  buildChart(parseInt(e.target.value));
+});
+</script>
+
+</body>
+</html>
